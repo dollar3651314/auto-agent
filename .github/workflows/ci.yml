@@ -1,0 +1,39 @@
+# 每个 PR 的自动检查（agents 规则 C54，模板 agents/模板/ci.yml）。项目还没有代码，目前只跑项目地图和索引检查。
+# 分支保护把这里的检查设为"必须通过"，并勾选 Do not allow bypassing the above settings（否则管理员可以直接合并）。
+# 公开仓库，或付费版（Pro、Team）的私有仓库才能开启；不能开启时，合并前人工确认是绿的（C54）。
+# 开启后检验：开一个小 PR，CI 跑完前尝试合并，必须被拒绝。
+# 原则：不需要任何密钥（外部服务用替身）；用到数据库的，用 GitHub 提供的数据库容器在真实数据库上再跑一遍（C37）。
+# 参考实现：amos111 的 .github/workflows/ci.yml（Node + Postgres + Playwright）
+# Java/Maven + MySQL/Redis/Kafka/ClickHouse 的写法：等 fxsystem 的 CI 实际跑通后补进本模板（v0.9，C54），跑通之前不写
+name: ci
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging, main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 用到 Postgres 时打开：
+    # services:
+    #   postgres:
+    #     image: postgres:16
+    #     env: { POSTGRES_PASSWORD: ci }
+    #     ports: ['5432:5432']
+    #     options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: 项目地图和索引检查（C53）
+        run: node scripts/check-project-index.mjs
+      # 有代码后在这里加项目自己的安装和单元测试命令（例如 npm ci、npm test）
+  # 有端到端测试时，加一个 e2e 任务：构建 → 安装浏览器 → 运行；失败时用 actions/upload-artifact 保存截图

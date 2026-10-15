@@ -1,0 +1,11 @@
+{
+  "_说明": "项目地图和项目索引的检查配置（agents 规则 C53）。由 scripts/check-project-index.mjs 读取，CI 每次 PR 都会运行。项目刚建立，还没有代码，所以检查全部文件、没有名单；有代码后按 agents/模板/项目索引.config.json 补充 lists（环境变量、数据库表等），并调整 include 的范围。",
+  "map": "项目地图.md",
+  "index": "项目索引.md",
+  "entry": ["CLAUDE.md", "AGENTS.md"],
+  "files": {
+    "include": ["**"],
+    "exclude": ["**/package-lock.json", "**/.gitignore"]
+  },
+  "lists": []
+}
